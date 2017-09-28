@@ -13,6 +13,7 @@ import banco.novo.Cidade;
 import banco.novo.Clientes;
 import banco.novo.Estado;
 import gerapedidos.principalController;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -36,9 +37,11 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Paint;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
@@ -204,12 +207,13 @@ public class CadastroClientesController implements Initializable {
     private Tab abaDados;
     @FXML
     private TabPane painelPrincipal;
+    @FXML
+    private DatePicker dtNascimento;
     private final EntityManagerFactory emf = Persistence.createEntityManagerFactory("geraPedidosPU");
     private List<Cidade> cidades = new ArrayList<>();
     private List<Estado> estados = new ArrayList<>();
     private List<Clientes> clientes = new ArrayList<>();
-    @FXML
-    private DatePicker dtNascimento;
+    private boolean edicao = false;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -219,7 +223,6 @@ public class CadastroClientesController implements Initializable {
         configuraCBUF();
         configuraCbEstadoCivil();
         configuraCBTipoContribuinte();
-        // buscaCidades();
     }
 
     private void buscaClientes() {
@@ -301,16 +304,128 @@ public class CadastroClientesController implements Initializable {
 
     @FXML
     private void actionBtnNovo(ActionEvent event) {
+        this.edicao = false;
+        this.abaClientes.setDisable(true);
+        this.painelPrincipal.getSelectionModel().select(abaDados);
+        
+        this.btnAnterior.setDisable(true);
+        this.btnCancelar.setDisable(false);
+        this.btnEditar.setDisable(true);
+        this.btnInativar.setDisable(true);
+        this.btnNovo.setDisable(true);
+        this.btnPrimeiro.setDisable(true);
+        this.btnProximo.setDisable(true);
+        this.btnSair.setDisable(true);
+        this.btnSalvar.setDisable(false);
+        this.btnUltimo.setDisable(true);
+        
+        // carregar dados, Salvar;
+        
+    }
+    
+    private void carregarDadosTela() {
+        Clientes cli = new Clientes();
+        cli.setApelido(this.tfApelido.getText());
+        cli.setAtivo("S");
+        cli.setBairro(this.tfBairroComercial.getText());
+        cli.setBairrodom(this.tfBairroDomicilio.getText());
+        cli.setCelular(this.tfCelular.getText());
+        cli.setCep(this.tfCEPComercial.getText());
+        cli.setCepdom(this.tfCEPDomicilio.getText());
+        cli.setCnpj(this.tfCNPJ.getText());
+        this.capturaCidadeEstado(cli);
+        cli.setComplCom(this.tfCompComercial.getText());
+        cli.setComplDom(this.tfCompComercial1.getText());
+        cli.setConjuge(this.tfConjuge.getText());
+        cli.setCpf(this.tfCPF.getText());
+        cli.setDataNasc(new Date(this.dtNascimento.getEditor().getText()));
+        cli.setDtaAdmissao(new Date(this.dtAdimissao.getEditor().getText()));
+        cli.setDtaAdmtrabalho(new Date(this.dtAdimissaoTrabalho.getEditor().getText()));
+        cli.setEmail(this.tfemail.getText());
+        cli.setEstadoCiv(this.cbEstadoCivil.getSelectionModel().getSelectedItem());
+        cli.setFiliacaoMae(this.tfMae.getText());
+        cli.setFiliacaoPai(this.tfPai.getText());
+        cli.setInscest(this.tfInscEstadual.getText());
+        cli.setLocaltrabalho(this.tfLocalTrabalho.getText());
+        cli.setLograCom(this.tfRuaComercial.getText());
+        cli.setLograDom(this.tfRuaDomicilio.getText());
+        cli.setNaturalidade(this.tfNaturalidade.getText());
+        cli.setNome(this.tfNomeCliente.getText());
+        cli.setNumCom(this.tfNumComercial.getText());
+        cli.setNumDom(this.tfNumDomicilio.getText());
+        cli.setObservacao(this.taObservacao.getText());
+        cli.setPessoacontato(this.tfContato.getText());
+        cli.setProftrabalho(this.tfProfissao.getText());
+        cli.setRazaosocial(this.tfRazaoSocial.getText());
+        cli.setRenda(new BigDecimal(this.TfRenda.getText()));
+        cli.setRg(this.tfRG.getText());
+        cli.setTelefone(this.tfTelefone.getText());
+        cli.setTelefonetrabalho(this.tfTelTrabalho.getText());
+        this.capturaTipoCliente(cli); // No banco é salvo F ou J
+        this.capturaTipoAliquotaIcms(cli); // 1 - Consumidor Final  / 2 - Contribuinte
+        cli.setUppernome(this.tfNomeCliente.getText().toUpperCase());
+    }
+    
+    private void capturaTipoAliquotaIcms(Clientes cli) {
+        int pos = this.cbContribuinte.getSelectionModel().getSelectedIndex();
+        if (pos == 0) {
+            cli.setTipoaliqicms(1);
+        } else {
+            cli.setTipoaliqicms(2);
+        }
+    }
+    
+    private void capturaTipoCliente(Clientes cli) {
+        String tipo = this.cbTipo.getSelectionModel().getSelectedItem();
+        if(tipo.equalsIgnoreCase("Física")) {
+            cli.setTipo("F");
+        } else {
+            cli.setTipo("J");
+        }
+    }
+    
+    // Preenche a cidade Domicílio e Comercial do cliente
+    private void capturaCidadeEstado(Clientes cli) {
+        cidades.stream().map((c) -> {
+            if(this.cbCidadeComercial.getSelectionModel().getSelectedItem().equalsIgnoreCase(c.getNome())) {
+                cli.setCodcidade(c.getId());
+            }
+            return c;
+        }).filter((c) -> (this.cbDomicilio.getSelectionModel().getSelectedItem().equalsIgnoreCase(c.getNome()))).forEachOrdered((c) -> {
+            cli.setCodcidadedom(c.getId());
+        });
     }
 
     @FXML
     private void actionBtnEditar(ActionEvent event) {
+        this.btnAnterior.setDisable(true);
+        this.btnCancelar.setDisable(false);
+        this.btnEditar.setDisable(true);
+        this.btnInativar.setDisable(true);
+        this.btnNovo.setDisable(true);
+        this.btnPrimeiro.setDisable(true);
+        this.btnProximo.setDisable(true);
+        this.btnSair.setDisable(true);
+        this.btnSalvar.setDisable(false);
+        this.btnUltimo.setDisable(true);
+        
         Clientes cli = this.tabelaClientes.getSelectionModel().getSelectedItem();
         editarCliente(cli);
     }
 
     @FXML
     private void actionBtnSalvar(ActionEvent event) {
+        
+        this.btnAnterior.setDisable(false);
+        this.btnCancelar.setDisable(true);
+        this.btnEditar.setDisable(false);
+        this.btnInativar.setDisable(false);
+        this.btnNovo.setDisable(false);
+        this.btnPrimeiro.setDisable(false);
+        this.btnProximo.setDisable(false);
+        this.btnSair.setDisable(false);
+        this.btnSalvar.setDisable(true);
+        this.btnUltimo.setDisable(false);
     }
 
     @FXML
@@ -319,6 +434,31 @@ public class CadastroClientesController implements Initializable {
 
     @FXML
     private void actionBtnInativar(ActionEvent event) {
+        try {
+            ClientesJpaController cliDao = new ClientesJpaController(emf);
+            Clientes c = this.tabelaClientes.getSelectionModel().getSelectedItem();
+            if(c.getAtivo().equalsIgnoreCase("S")) {
+                c.setAtivo("N");
+            } else {
+                c.setAtivo("S");
+            }
+            cliDao.edit(c);
+            this.actionConsultarClientes(new ActionEvent());
+            alterarBotaoAtivarInativar(c);
+        } catch (Exception ex) {
+            Alerta a = new Alerta(5, "Selecione um Cliente para Inativar/Ativar","");
+        }
+    }
+    
+    private void alterarBotaoAtivarInativar(Clientes cli) {
+        if (cli.getAtivo().equalsIgnoreCase("S")) {
+            this.btnInativar.setText("Inativar");
+            this.imgAtivaDesativa.setImage(new Image("/icones/inativar.png"));
+        } else {
+            this.btnInativar.setText("Ativar");
+            this.imgAtivaDesativa.setImage(new Image("/icones/ativar.png"));
+        }
+        
     }
 
     @FXML
@@ -380,6 +520,7 @@ public class CadastroClientesController implements Initializable {
 
     private void editarCliente(Clientes cli) {
         if (!this.tabelaClientes.getItems().isEmpty()) {
+            this.edicao = true;
             this.painelPrincipal.getSelectionModel().select(this.abaDados);
             // preenchimento dos campos por ordem alfabética
             this.TfRenda.setText(String.valueOf(cli.getRenda()));
@@ -421,33 +562,43 @@ public class CadastroClientesController implements Initializable {
             carregaCampoAtivo(cli);
         }
     }
-    
+
     private void carregaCampoAtivo(Clientes cli) {
-        // veirificar se S ou N e configurar cor Vermelha ou verde;
+        if (cli.getAtivo().equalsIgnoreCase("S")) {
+            this.lbAtivo.setText("SIM");
+            this.lbAtivo.setTextFill(Paint.valueOf("GREEN"));
+        } else {
+            this.lbAtivo.setText("NÃO");
+            this.lbAtivo.setTextFill(Paint.valueOf("RED"));
+        }
     }
-    
+
     private void carregaDatas(Clientes cli) {
-        LocalDate ld = toLocalDate(cli.getDtaAdmissao());
-        this.dtAdimissao.setValue(ld);
-        LocalDate ld1 = toLocalDate(cli.getDtaAdmtrabalho());
-        this.dtAdimissaoTrabalho.setValue(ld1);
-        LocalDate ld2 = toLocalDate(cli.getDataNasc());
-        this.dtNascimento.setValue(ld2);
+        if (null != cli.getDtaAdmissao()) {
+            LocalDate ld = toLocalDate(cli.getDtaAdmissao());
+            this.dtAdimissao.setValue(ld);
+        }
+        if (null != cli.getDtaAdmtrabalho()) {
+            LocalDate ld1 = toLocalDate(cli.getDtaAdmtrabalho());
+            this.dtAdimissaoTrabalho.setValue(ld1);
+        }
+        if (null != cli.getDataNasc()) {
+            LocalDate ld2 = toLocalDate(cli.getDataNasc());
+            this.dtNascimento.setValue(ld2);
+        }
     }
-    
+
+    // Convertendo Date em Local Date;
     public static LocalDate toLocalDate(Date d) {
         Instant instant = Instant.ofEpochMilli(d.getTime());
         LocalDate localDate = LocalDateTime.ofInstant(instant, ZoneId.systemDefault()).toLocalDate();
         return localDate;
     }
-        
-        
 
     private void CarregaCidadesEstadoCliente(Clientes cli) {
         this.buscaCidades();
         cidades.stream().map((c) -> {
-            if(c.getId() == cli.getCodcidade()) {
-                System.out.println("Entrou aqui : Cidade 1 = " + c.getId());
+            if (c.getId() == cli.getCodcidade()) {
                 this.cbCidadeComercial.getSelectionModel().select(c.getNome());
                 this.cbUFComercial.getSelectionModel().select(c.getEstado().getUf());
             }
@@ -526,10 +677,26 @@ public class CadastroClientesController implements Initializable {
     }
 
     private String carregaTipoCliente(String tipo) {
-        if(tipo.equalsIgnoreCase("F")) {
+        if (tipo.equalsIgnoreCase("F")) {
             return "Física";
         } else {
             return "Jurídica";
+        }
+    }
+
+    @FXML
+    private void verificaSelecaoItem(KeyEvent event) {
+       /* if(!this.tabelaClientes.getItems().isEmpty()) {
+            Clientes cli = this.tabelaClientes.getSelectionModel().getSelectedItem();
+            this.alterarBotaoAtivarInativar(cli);
+        }*/
+    }
+
+    @FXML
+    private void verificaClickItem(MouseEvent event) {
+        if(!this.tabelaClientes.getItems().isEmpty()) {
+            Clientes cli = this.tabelaClientes.getSelectionModel().getSelectedItem();
+            this.alterarBotaoAtivarInativar(cli);
         }
     }
 

@@ -45,7 +45,7 @@
                               </Button>
                            </children>
                         </HBox>
-                        <TableView fx:id="tabelaClientes" layoutY="68.0" prefHeight="486.0" prefWidth="750.0" style="-fx-border-color: black;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                        <TableView fx:id="tabelaClientes" layoutY="68.0" onKeyPressed="#verificaSelecaoItem" onMouseClicked="#verificaClickItem" prefHeight="486.0" prefWidth="750.0" style="-fx-border-color: black;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
                           <columns>
                             <TableColumn fx:id="colCodigo" prefWidth="75.0" text="Código" />
                             <TableColumn fx:id="colNome" prefWidth="261.0" text="Nome" />
