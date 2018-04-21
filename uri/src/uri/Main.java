@@ -11,32 +11,31 @@ import java.io.InputStreamReader;
 
 public class Main {
 
+    public static long fatorial(long num) {
+        if(num == 0) {
+            return 1;
+        } else {
+            
+            long fat = num;
+            while(--num > 0) {
+                fat *= num;
+            }
+            return fat;
+        }
+    }
+    
     public static void main(String[] args) throws IOException {
 
         InputStreamReader ir = new InputStreamReader(System.in);
         BufferedReader in = new BufferedReader(ir);
-
-        String entrada;
-        char aux[];
+        int a,b;
+        String entrada[];
         while(in.ready()) {
-            entrada = in.readLine();
-            aux = entrada.toCharArray();
-            boolean mai = false;
-            for (int i = 0; i < entrada.length(); i++) {
-                if(aux[i] != ' '){
-                    if(mai){
-                        aux[i] = Character.toLowerCase(aux[i]);
-                        mai = false;
-                    } else {
-                        aux[i] = Character.toUpperCase(aux[i]);
-                        mai = true;
-                    }
-                } 
-            }
-            System.out.println(aux);
-        }
-        
-
+            entrada = in.readLine().split(" ");
+            a = Integer.parseInt(entrada[0]);
+            b = Integer.parseInt(entrada[1]);
+            System.out.println(fatorial(a) + fatorial(b));
+        } 
     }
 
 }
